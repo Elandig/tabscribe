@@ -1,4 +1,5 @@
 import type { Recording } from '$lib/types';
+import { extractAudio } from './audio-extractor';
 
 export async function downloadRecording(recording: Recording): Promise<boolean> {
 	try {
@@ -76,4 +77,30 @@ export async function downloadMultipleRecordings(recordings: Recording[]): Promi
 
 export function isFileSystemAccessSupported(): boolean {
 	return 'showSaveFilePicker' in window;
+}
+
+export async function downloadAudioOnly(recording: Recording): Promise<boolean> {
+	try {
+		const audioBlob = await extractAudio(recording.blob);
+
+		const audioFilename = recording.filename.replace(/\.(webm|mp4)$/, '-audio.webm');
+		const audioRecording: Recording = {
+			...recording,
+			blob: audioBlob,
+			filename: audioFilename,
+			mimeType: 'audio/webm;codecs=opus'
+		};
+
+		if ('showSaveFilePicker' in window) {
+			return await downloadWithFileSystemAPI(audioRecording);
+		}
+		return downloadWithAnchor(audioRecording);
+	} catch (error) {
+		console.error('Audio download failed:', error);
+		throw new Error(
+			error instanceof Error
+				? error.message
+				: 'Failed to extract and download audio. Please try again.'
+		);
+	}
 }

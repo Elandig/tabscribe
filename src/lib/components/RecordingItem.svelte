@@ -2,7 +2,7 @@
 	import { onDestroy } from 'svelte';
 	import type { Recording } from '$lib/types';
 	import { formatDuration, formatFileSize, formatRelativeTime } from '$lib/utils/formatters';
-	import { downloadRecording } from '$lib/utils/file-export';
+	import { downloadRecording, downloadAudioOnly } from '$lib/utils/file-export';
 	import { recordings } from '$lib/stores/recordings';
 	import { settings } from '$lib/stores/settings';
 	import { transcriptionManager } from '$lib/transcription/manager';
@@ -15,6 +15,7 @@
 
 	let isDeleting = $state(false);
 	let isTranscribing = $state(false);
+	let isDownloadingAudio = $state(false);
 	let showLiveTranscription = $state(false);
 	let showCloudTranscription = $state(false);
 	let videoUrl = $state<string | null>(null);
@@ -43,6 +44,20 @@
 		const success = await downloadRecording(recording);
 		if (success) {
 			await recordings.update(recording.id, { isDownloaded: true });
+		}
+	}
+
+	async function handleDownloadAudio() {
+		if (isDownloadingAudio) return;
+
+		isDownloadingAudio = true;
+		try {
+			await downloadAudioOnly(recording);
+		} catch (error) {
+			console.error('Failed to download audio:', error);
+			alert('Failed to download audio. Please try again.');
+		} finally {
+			isDownloadingAudio = false;
 		}
 	}
 
@@ -159,9 +174,19 @@
 				type="button"
 				onclick={handleDownload}
 				class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors text-sm"
-				title="Download"
+				title="Download Video"
 			>
-				Download
+				Download Video
+			</button>
+
+			<button
+				type="button"
+				onclick={handleDownloadAudio}
+				disabled={isDownloadingAudio}
+				class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+				title="Download Audio"
+			>
+				{isDownloadingAudio ? 'Processing...' : 'Download Audio'}
 			</button>
 
 			<button

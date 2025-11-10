@@ -8,6 +8,7 @@
 		"build": "vite build",
 		"preview": "vite preview --host",
 		"prepare": "svelte-kit sync || echo ''",
+		"postinstall": "node scripts/copy-ffmpeg.js",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
@@ -38,6 +39,9 @@
 		"vite": "^7.1.10"
 	},
 	"dependencies": {
+		"@ffmpeg/core": "^0.12.6",
+		"@ffmpeg/ffmpeg": "^0.12.10",
+		"@ffmpeg/util": "^0.12.1",
 		"idb": "^8.0.3"
 	}
 }
