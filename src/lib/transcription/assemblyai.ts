@@ -132,7 +132,7 @@ export class AssemblyAIAdapter {
 
 		body.punctuate = true;
 		body.format_text = true;
-		body.speech_model = 'universal-2';
+		body.speech_models = ['universal-2'];
 
 		const response = await fetch(`${this.baseURL}/transcript`, {
 			method: 'POST',
