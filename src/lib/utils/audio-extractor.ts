@@ -67,9 +67,28 @@ export async function extractAudio(
 		// WebM container only accepts Opus/Vorbis. -c:a copy is safe (and fast) only
 		// when the source is already a WebM/Opus stream; for uploads of other formats
 		// we must re-encode to Opus or the muxer drops the audio (264-byte output).
+		// Bitrates this low only fit MPEG-2 layer 3 at <=24 kHz, mono — apply the
+		// voice preset (22050 Hz, mono) automatically so libmp3lame doesn't reject
+		// the params.
+		const isVoiceMp3 = format === 'mp3' && mp3Bitrate <= 24;
 		const args =
 			format === 'mp3'
-				? ['-i', 'input.webm', '-vn', '-acodec', 'libmp3lame', '-b:a', `${mp3Bitrate}k`, outputName]
+				? isVoiceMp3
+					? [
+							'-i',
+							'input.webm',
+							'-vn',
+							'-acodec',
+							'libmp3lame',
+							'-b:a',
+							`${mp3Bitrate}k`,
+							'-ar',
+							'22050',
+							'-ac',
+							'1',
+							outputName
+						]
+					: ['-i', 'input.webm', '-vn', '-acodec', 'libmp3lame', '-b:a', `${mp3Bitrate}k`, outputName]
 				: sourceIsWebm
 					? ['-i', 'input.webm', '-vn', '-acodec', 'copy', outputName]
 					: ['-i', 'input.webm', '-vn', '-c:a', 'libvorbis', '-q:a', '5', outputName];

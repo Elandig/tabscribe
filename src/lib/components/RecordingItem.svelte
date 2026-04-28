@@ -223,7 +223,9 @@
 							onclick={() => handleDownloadAudio('mp3')}
 							class="block w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
 						>
-							MP3 ({$settings.recording.mp3Bitrate} kbps)
+							MP3 ({$settings.recording.mp3Bitrate === 16
+							? 'voice'
+							: `${$settings.recording.mp3Bitrate} kbps`})
 						</button>
 					</div>
 				{/if}

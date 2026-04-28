@@ -10,7 +10,7 @@ const defaultSettings: AppSettings = {
 		defaultAudioCodec: 'opus',
 		defaultAudioBitrate: 128,
 		defaultVideoBitrate: 2500,
-		mp3Bitrate: 128
+		mp3Bitrate: 16
 	},
 	storage: {
 		autoDeleteAfterDays: null,

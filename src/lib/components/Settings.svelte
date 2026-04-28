@@ -197,7 +197,7 @@
 				MP3 bitrate (used when downloading audio as MP3)
 			</p>
 			<div class="space-y-2">
-				{#each [96, 128, 192, 320] as br (br)}
+				{#each [16, 96, 128, 192, 320] as br (br)}
 					<label class="flex items-center gap-2 cursor-pointer">
 						<input
 							type="radio"
@@ -205,12 +205,16 @@
 							value={br}
 							checked={$settings.recording.mp3Bitrate === br}
 							onchange={() =>
-								settings.updateRecording({ mp3Bitrate: br as 96 | 128 | 192 | 320 })}
+								settings.updateRecording({ mp3Bitrate: br as 16 | 96 | 128 | 192 | 320 })}
 							class="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
 						/>
-						<span class="text-sm text-gray-700"
-							>{br} kbps{br === 128 ? ' (default)' : ''}</span
-						>
+						<span class="text-sm text-gray-700">
+							{#if br === 16}
+								Voice (16 kbps, 22 kHz mono &mdash; smallest, speech only) (default)
+							{:else}
+								{br} kbps
+							{/if}
+						</span>
 					</label>
 				{/each}
 			</div>
