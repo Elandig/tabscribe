@@ -1,4 +1,4 @@
-import type { Recording } from '$lib/types';
+import type { AudioDownloadFormat, Recording } from '$lib/types';
 import { extractAudio } from './audio-extractor';
 
 export async function downloadRecording(recording: Recording): Promise<boolean> {
@@ -79,16 +79,29 @@ export function isFileSystemAccessSupported(): boolean {
 	return 'showSaveFilePicker' in window;
 }
 
-export async function downloadAudioOnly(recording: Recording): Promise<boolean> {
+export async function downloadAudioOnly(
+	recording: Recording,
+	format: AudioDownloadFormat = 'webm',
+	mp3Bitrate?: number
+): Promise<boolean> {
 	try {
-		const audioBlob = await extractAudio(recording.blob);
+		const audioBlob = await extractAudio(recording.blob, {
+			format,
+			mp3Bitrate,
+			sourceMimeType: recording.mimeType
+		});
 
-		const audioFilename = recording.filename.replace(/\.(webm|mp4)$/, '-audio.webm');
+		const extension = format === 'mp3' ? 'mp3' : 'webm';
+		const mimeType = format === 'mp3' ? 'audio/mpeg' : 'audio/webm;codecs=opus';
+		const audioFilename = recording.filename.replace(
+			/\.(webm|mp4)$/,
+			`-audio.${extension}`
+		);
 		const audioRecording: Recording = {
 			...recording,
 			blob: audioBlob,
 			filename: audioFilename,
-			mimeType: 'audio/webm;codecs=opus'
+			mimeType
 		};
 
 		if ('showSaveFilePicker' in window) {

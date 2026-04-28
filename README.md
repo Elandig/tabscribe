@@ -1,38 +1,37 @@
-# sv
+# TabScribe
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Offline-first meeting transcription in your browser.
 
-## Creating a project
+Live: <https://tabscribe.sestudio.org/>
 
-If you're seeing this, you've probably already done this step. Congrats!
+TabScribe records a browser tab (or just the system mic), transcribes it
+locally using the browser's Web Speech API, and stores everything in IndexedDB
+on your machine. No account, no upload, no third-party server unless you opt
+in to a cloud transcription provider.
+
+## Features
+
+- Record a screen tab with audio, or audio-only sessions
+- Live transcription using the browser's Web Speech API (no network required)
+- Optional cloud transcription via AssemblyAI for higher quality and speaker
+  diarization (bring your own API key, stored locally)
+- Import existing audio or video files for transcription
+- Download recordings, or extract audio as WebM or MP3
+- Local-only storage in IndexedDB with optional auto-cleanup rules
+
+## Running locally
+
+Requires Node 20+.
 
 ```sh
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
+git clone https://github.com/Elandig/tabscribe.git
+cd tabscribe
+npm install
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
-## Building
+To build a static production bundle: `npm run build` (output in `build/`).
 
-To create a production version of your app:
+## License
 
-```sh
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+MIT. See [LICENSE](LICENSE).

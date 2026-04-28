@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
-	import type { Recording } from '$lib/types';
+	import type { AudioDownloadFormat, Recording } from '$lib/types';
 	import { formatDuration, formatFileSize, formatRelativeTime } from '$lib/utils/formatters';
 	import { downloadRecording, downloadAudioOnly } from '$lib/utils/file-export';
 	import { recordings } from '$lib/stores/recordings';
@@ -16,10 +16,25 @@
 	let isDeleting = $state(false);
 	let isTranscribing = $state(false);
 	let isDownloadingAudio = $state(false);
+	let audioMenuOpen = $state(false);
+	let audioMenuEl = $state<HTMLDivElement | null>(null);
 	let showLiveTranscription = $state(false);
 	let showCloudTranscription = $state(false);
 	let videoUrl = $state<string | null>(null);
 	let videoElement: HTMLVideoElement | null = $state(null);
+
+	$effect(() => {
+		if (!audioMenuOpen) return;
+
+		function handlePointerDown(e: PointerEvent) {
+			if (audioMenuEl && !audioMenuEl.contains(e.target as Node)) {
+				audioMenuOpen = false;
+			}
+		}
+
+		window.addEventListener('pointerdown', handlePointerDown);
+		return () => window.removeEventListener('pointerdown', handlePointerDown);
+	});
 
 	$effect(() => {
 		videoUrl = URL.createObjectURL(recording.blob);
@@ -47,12 +62,13 @@
 		}
 	}
 
-	async function handleDownloadAudio() {
+	async function handleDownloadAudio(format: AudioDownloadFormat) {
 		if (isDownloadingAudio) return;
 
+		audioMenuOpen = false;
 		isDownloadingAudio = true;
 		try {
-			await downloadAudioOnly(recording);
+			await downloadAudioOnly(recording, format, $settings.recording.mp3Bitrate);
 		} catch (error) {
 			console.error('Failed to download audio:', error);
 			alert('Failed to download audio. Please try again.');
@@ -179,15 +195,39 @@
 				Download Video
 			</button>
 
-			<button
-				type="button"
-				onclick={handleDownloadAudio}
-				disabled={isDownloadingAudio}
-				class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-				title="Download Audio"
-			>
-				{isDownloadingAudio ? 'Processing...' : 'Download Audio'}
-			</button>
+			<div class="relative" bind:this={audioMenuEl}>
+				<button
+					type="button"
+					onclick={() => (audioMenuOpen = !audioMenuOpen)}
+					disabled={isDownloadingAudio}
+					class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+					title="Download Audio"
+				>
+					{isDownloadingAudio ? 'Processing...' : 'Download Audio'}
+					<span class="text-xs">▾</span>
+				</button>
+
+				{#if audioMenuOpen && !isDownloadingAudio}
+					<div
+						class="absolute right-0 mt-1 z-10 bg-white border border-gray-200 rounded shadow-md min-w-40 overflow-hidden"
+					>
+						<button
+							type="button"
+							onclick={() => handleDownloadAudio('webm')}
+							class="block w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+						>
+							WebM
+						</button>
+						<button
+							type="button"
+							onclick={() => handleDownloadAudio('mp3')}
+							class="block w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+						>
+							MP3 ({$settings.recording.mp3Bitrate} kbps)
+						</button>
+					</div>
+				{/if}
+			</div>
 
 			<button
 				type="button"
