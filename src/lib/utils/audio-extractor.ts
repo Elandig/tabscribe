@@ -1,5 +1,12 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
+import type { AudioDownloadFormat } from '$lib/types';
+
+export interface ExtractAudioOptions {
+	format?: AudioDownloadFormat;
+	mp3Bitrate?: number;
+	sourceMimeType?: string;
+}
 
 let ffmpegInstance: FFmpeg | null = null;
 let isLoading = false;
@@ -42,23 +49,38 @@ async function loadFFmpeg(): Promise<FFmpeg> {
 	return ffmpegInstance!;
 }
 
-export async function extractAudio(videoBlob: Blob): Promise<Blob> {
+export async function extractAudio(
+	videoBlob: Blob,
+	options: ExtractAudioOptions = {}
+): Promise<Blob> {
+	const format: AudioDownloadFormat = options.format ?? 'webm';
+	const mp3Bitrate = options.mp3Bitrate ?? 128;
+	const sourceIsWebm = (options.sourceMimeType ?? '').toLowerCase().includes('webm');
+
 	try {
 		const ffmpeg = await loadFFmpeg();
 
 		const inputData = await fetchFile(videoBlob);
-
 		await ffmpeg.writeFile('input.webm', inputData);
-		await ffmpeg.exec(['-i', 'input.webm', '-vn', '-acodec', 'copy', 'output.webm']);
-		const outputData = await ffmpeg.readFile('output.webm');
+
+		const outputName = format === 'mp3' ? 'output.mp3' : 'output.webm';
+		// WebM container only accepts Opus/Vorbis. -c:a copy is safe (and fast) only
+		// when the source is already a WebM/Opus stream; for uploads of other formats
+		// we must re-encode to Opus or the muxer drops the audio (264-byte output).
+		const args =
+			format === 'mp3'
+				? ['-i', 'input.webm', '-vn', '-acodec', 'libmp3lame', '-b:a', `${mp3Bitrate}k`, outputName]
+				: sourceIsWebm
+					? ['-i', 'input.webm', '-vn', '-acodec', 'copy', outputName]
+					: ['-i', 'input.webm', '-vn', '-c:a', 'libvorbis', '-q:a', '5', outputName];
+
+		await ffmpeg.exec(args);
+		const outputData = await ffmpeg.readFile(outputName);
 		await ffmpeg.deleteFile('input.webm');
-		await ffmpeg.deleteFile('output.webm');
+		await ffmpeg.deleteFile(outputName);
 
-		const audioBlob = new Blob([new Uint8Array(outputData as Uint8Array)], {
-			type: 'audio/webm;codecs=opus'
-		});
-
-		return audioBlob;
+		const mimeType = format === 'mp3' ? 'audio/mpeg' : 'audio/webm;codecs=opus';
+		return new Blob([new Uint8Array(outputData as Uint8Array)], { type: mimeType });
 	} catch (error) {
 		console.error('Error extracting audio:', error);
 		throw new Error(

@@ -190,6 +190,32 @@
 			</button>
 		</section>
 
+		<!-- Audio Download Settings -->
+		<section class="mb-8 pb-8 border-b border-gray-200">
+			<h3 class="text-lg font-semibold text-gray-900 mb-4">Audio Download</h3>
+			<p class="text-sm text-gray-600 mb-3">
+				MP3 bitrate (used when downloading audio as MP3)
+			</p>
+			<div class="space-y-2">
+				{#each [96, 128, 192, 320] as br (br)}
+					<label class="flex items-center gap-2 cursor-pointer">
+						<input
+							type="radio"
+							name="mp3Bitrate"
+							value={br}
+							checked={$settings.recording.mp3Bitrate === br}
+							onchange={() =>
+								settings.updateRecording({ mp3Bitrate: br as 96 | 128 | 192 | 320 })}
+							class="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+						/>
+						<span class="text-sm text-gray-700"
+							>{br} kbps{br === 128 ? ' (default)' : ''}</span
+						>
+					</label>
+				{/each}
+			</div>
+		</section>
+
 		<!-- Transcription Settings -->
 		<section class="mb-8">
 			<h3 class="text-lg font-semibold text-gray-900 mb-4">Transcription</h3>
