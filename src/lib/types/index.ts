@@ -36,7 +36,7 @@ export interface RecordingConfig {
 export type VideoCodec = 'vp8' | 'vp9' | 'h264';
 export type AudioCodec = 'opus' | 'aac';
 export type AudioDownloadFormat = 'webm' | 'mp3';
-export type Mp3Bitrate = 96 | 128 | 192 | 320;
+export type Mp3Bitrate = 16 | 96 | 128 | 192 | 320;
 
 export interface AppSettings {
 	recording: RecordingSettings;
